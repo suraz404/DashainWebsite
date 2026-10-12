@@ -1,0 +1,17 @@
+# Local development database. Start with:  docker compose up -d db
+# Port 5544 (not 5432) so it never clashes with a Postgres you already run.
+services:
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: csitan
+      POSTGRES_PASSWORD: csitan
+      POSTGRES_DB: csitan_dashain
+    ports:
+      - "127.0.0.1:5544:5432"
+    volumes:
+      - csitan-pgdata:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+volumes:
+  csitan-pgdata:

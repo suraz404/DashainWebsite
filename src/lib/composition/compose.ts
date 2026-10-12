@@ -85,7 +85,8 @@ export function composeSignatures(
   const regionNames = Object.keys(config.regions).sort(); // sorted: independent of object key order
   const usable = Object.fromEntries(regionNames.map((n) => [n, usableRect(config.regions[n]!, config)]));
   const usableArea = Object.fromEntries(regionNames.map((n) => [n, Math.max(rectArea(usable[n]!), EPS)]));
-  const keepOut = expandRect(config.protectedRegion, config.protectedInset);
+  // Hard keep-out zones: the protected region (with margin) plus any decorations.
+  const keepOuts = [expandRect(config.protectedRegion, config.protectedInset), ...config.keepOuts];
   const covered: Record<RegionName, number> = Object.fromEntries(regionNames.map((n) => [n, 0]));
 
   // Distances beyond this don't make a spot "better". Relative to the signature size so the layout is
@@ -124,7 +125,7 @@ export function composeSignatures(
       const cx = area.x + e.width / 2 + spanX * rng();
       const cy = area.y + e.height / 2 + spanY * rng();
       const bounds = rotatedBounds(cx, cy, size.w, size.h, rotation);
-      // removed // hard constraint, every tier
+      if (keepOuts.some((k) => intersectionArea(bounds, k) > 0)) continue; // hard constraint, every tier
 
       // Reject as early as possible: most candidates fail on the first neighbour they touch, so
       // bailing out here (instead of scanning all placed boxes) is what keeps crowded posters fast.

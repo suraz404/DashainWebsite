@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { composeSignatures } from "@/lib/composition/compose";
-import { toSignatureInput, type PosterSignatureDTO } from "@/lib/composition/from-api";
+import { toSignatureInput } from "@/lib/composition/from-api";
+import { fetchApprovedSignatures } from "@/lib/signatures/client";
 import type { SignatureInput } from "@/lib/composition/types";
 import SignatureOverlay from "./SignatureOverlay";
 
@@ -20,10 +21,12 @@ export default function PosterSignatures({ initial, poll = true }: { initial: Si
   useEffect(() => {
     if (!poll) return;
     const t = setInterval(async () => {
-      const res = await fetch("/api/signatures", { cache: "no-store" }).catch(() => null);
-      if (!res?.ok) return;
-      const next = ((await res.json()) as PosterSignatureDTO[]).map(toSignatureInput);
-      setInputs((prev) => (sameSet(prev, next) ? prev : next)); // same list → same reference → no recompute
+      try {
+        const next = (await fetchApprovedSignatures()).map(toSignatureInput);
+        setInputs((prev) => (sameSet(prev, next) ? prev : next)); // same list → same reference → no recompute
+      } catch {
+        // A failed refresh keeps what's already on the poster; the next tick tries again.
+      }
     }, 10_000);
     return () => clearInterval(t);
   }, [poll]);

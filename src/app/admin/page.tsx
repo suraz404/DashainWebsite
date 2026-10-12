@@ -12,6 +12,7 @@ function Preview({ id, token }: { id: string; token: string }) {
       .then((b) => setSrc((url = URL.createObjectURL(b))));
     return () => URL.revokeObjectURL(url);
   }, [id, token]);
+  if (!src) return <span className="h-12 w-24 rounded bg-neutral-100" />; // placeholder until the blob loads
   // eslint-disable-next-line @next/next/no-img-element
   return <img src={src} alt="" className="h-12 w-24 rounded bg-white object-contain" />;
 }
@@ -52,8 +53,8 @@ export default function Admin() {
             <Preview id={s.id} token={token} />
             <span className="w-24 text-sm font-medium">{s.status}</span>
             <span className="flex-1 truncate text-xs text-neutral-500">{s.id}</span>
-            <button onClick={() => set(s.id, "approved")} className="rounded border px-2 py-1">Approve</button>
-            <button onClick={() => set(s.id, "rejected")} className="rounded border px-2 py-1">Reject</button>
+            <button onClick={() => set(s.id, "APPROVED")} className="rounded border px-2 py-1">Approve</button>
+            <button onClick={() => set(s.id, "REJECTED")} className="rounded border px-2 py-1">Reject</button>
           </li>
         ))}
       </ul>

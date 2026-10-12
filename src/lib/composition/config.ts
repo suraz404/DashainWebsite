@@ -1,4 +1,4 @@
-import { POSTER, PROTECTED_REGION, SAFE_REGIONS } from "@/lib/poster/config";
+import { DECORATION_KEEP_OUTS, POSTER, PROTECTED_REGION, SAFE_REGIONS } from "@/lib/poster/config";
 import type { CompositionConfig } from "./types";
 
 /**
@@ -15,6 +15,7 @@ export const DEFAULT_COMPOSITION_CONFIG: CompositionConfig = {
   poster: { width: POSTER.width, height: POSTER.height },
   regions: SAFE_REGIONS,
   protectedRegion: PROTECTED_REGION,
+  keepOuts: DECORATION_KEEP_OUTS,
   maxWidth: 210,
   maxHeight: 105,
   minScale: 0.45,
@@ -36,6 +37,7 @@ export function scaleCompositionConfig(c: CompositionConfig, k: number): Composi
     poster: { width: c.poster.width * k, height: c.poster.height * k },
     regions: Object.fromEntries(Object.entries(c.regions).map(([n, v]) => [n, r(v)])),
     protectedRegion: r(c.protectedRegion),
+    keepOuts: c.keepOuts.map(r),
     maxWidth: c.maxWidth * k,
     maxHeight: c.maxHeight * k,
     posterEdgeInset: c.posterEdgeInset * k,
@@ -58,6 +60,7 @@ export function assertValidConfig(c: CompositionConfig): void {
     bad("maxAttemptsPerRegion must be an integer 1–1000");
   }
   if (!(c.maxOverlapRatio >= 0 && c.maxOverlapRatio < 1)) bad("maxOverlapRatio must be in [0, 1)");
+  if (!Array.isArray(c.keepOuts)) bad("keepOuts must be an array");
   if (Object.keys(c.regions).length === 0) bad("at least one region is required");
   const poster = { x: 0, y: 0, width: c.poster.width, height: c.poster.height };
   for (const [name, r] of Object.entries(c.regions)) {

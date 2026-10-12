@@ -92,6 +92,8 @@ export interface CompositionConfig {
   maxRotationDeg: number;
   /** Keep-out margin inside the poster edge (so signatures stay within the decorative border). */
   posterEdgeInset: number;
+  /** Additional areas to avoid (e.g. corner ornaments). Same hard rule as the protected region. */
+  keepOuts: Rect[];
   /** Extra keep-out margin around the protected region. */
   protectedInset: number;
   /** Required clearance between bounding boxes for a "clean" placement. */

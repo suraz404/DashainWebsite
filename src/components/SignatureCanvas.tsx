@@ -40,6 +40,7 @@ export default function SignatureCanvas() {
   };
 
   const down = (e: React.PointerEvent) => {
+    if (state === "sending") return; // don't let new strokes appear mid-upload (success would wipe them)
     canvasRef.current!.setPointerCapture(e.pointerId);
     drawing.current = true;
     strokes.current.push([pos(e)]);
@@ -67,14 +68,23 @@ export default function SignatureCanvas() {
     }
     const form = new FormData();
     form.append("signature", blob, "signature.png");
-    const res = await fetch("/api/signatures", { method: "POST", body: form });
+    let res: Response;
+    try {
+      res = await fetch("/api/signatures", { method: "POST", body: form });
+    } catch {
+      // Network down / request aborted. The strokes are untouched, so the user can simply retry.
+      setMessage("We couldn't reach the server. Check your connection and try again. Your signature is still here.");
+      return setState("error");
+    }
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      setMessage(data.status === "approved" ? "Thank you! Your signature is on the poster." : "Thank you! Your signature awaits approval.");
+      // Submissions are moderated: a new signature is PENDING until an admin approves it.
+      setMessage("Thank you! Your signature was received and will appear on the poster once approved.");
       setState("done");
-      clear();
+      clear(); // only on success
     } else {
-      setMessage(data.error ?? "Something went wrong");
+      // Keep the drawing so nothing is lost.
+      setMessage(`${data.error ?? "Something went wrong."} Your signature is still here.`);
       setState("error");
     }
   };

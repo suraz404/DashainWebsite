@@ -56,6 +56,18 @@ export function deriveSafeRegions(
 /** Greeting, heading and key decoration live here. Signature overlays must not intersect it. */
 export const PROTECTED_REGION: Rect = { x: 216, y: 320, width: 768, height: 960 };
 
+/** Corner rosettes drawn by PosterArtwork. Single source of truth for artwork AND signature keep-outs. */
+export const CORNER_ROSETTES = {
+  centers: [[96, 96], [1104, 96], [96, 1504], [1104, 1504]] as const,
+  radius: 34,
+};
+
+/** Decorations signatures must not cover (rosette + 12-unit margin). Fed to the composition engine. */
+export const DECORATION_KEEP_OUTS: Rect[] = CORNER_ROSETTES.centers.map(([cx, cy]) => {
+  const half = CORNER_ROSETTES.radius + 12;
+  return { x: cx - half, y: cy - half, width: half * 2, height: half * 2 };
+});
+
 /** Intrinsic size of src/assets/poster/greeting.webp (trimmed from the supplied artwork). */
 export const GREETING_IMAGE_SIZE = { width: 2400, height: 2327 } as const;
 

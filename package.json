@@ -9,13 +9,25 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:local:start": "scripts/local-postgres.sh start",
+    "db:local:stop": "scripts/local-postgres.sh stop",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:all": "npm run typecheck && npm run lint && npm test && npm run test:integration && npm run test:e2e"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "7.10.0",
+    "@prisma/client": "7.10.0",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
+    "sharp": "0.35.5",
     "zod": "^4.6.6"
   },
   "devDependencies": {
@@ -23,11 +35,15 @@
     "@playwright/test": "1.64.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^24.19.2",
+    "@types/pg": "8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "18.0.7",
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
+    "pg": "8.23.1",
+    "prisma": "7.10.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "5.0.4"

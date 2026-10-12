@@ -47,3 +47,11 @@ next-env.d.ts
 /test-results
 /playwright-report
 /.next-e2e
+
+# local Postgres cluster, stored uploads, generated Prisma client
+/.pgdata
+/.pgpass.tmp
+/storage
+/src/generated
+!.env.example
+/.test-storage

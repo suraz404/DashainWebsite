@@ -1,6 +1,6 @@
 import type { SignatureInput } from "./types";
 
-/** Shape returned by GET /api/signatures and `listPosterSignatures()`. */
+/** Shape returned by GET /api/signatures and `SignatureService.listApprovedForPoster()`. */
 export interface PosterSignatureDTO {
   id: string;
   width: number;

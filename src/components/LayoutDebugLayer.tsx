@@ -15,6 +15,9 @@ export default function LayoutDebugLayer({ result }: { result: CompositionResult
         </g>
       ))}
       <rect x={p.x - m} y={p.y - m} width={p.width + 2 * m} height={p.height + 2 * m} fill="rgba(255,0,0,0.05)" stroke="red" strokeWidth="3" strokeDasharray="12 8" />
+      {C.keepOuts.map((k, i) => (
+        <rect key={i} {...k} fill="rgba(255,0,0,0.08)" stroke="red" strokeWidth="2" strokeDasharray="6 6" />
+      ))}
       {result.placements.map((s) => (
         <rect key={s.id} {...s.bounds} fill="none" strokeWidth="1.5" stroke={s.layout.quality === "clean" ? "green" : "orange"} />
       ))}

@@ -22,7 +22,7 @@ function make(n: number, offset = 0): SignatureInput[] {
 }
 
 const poster = (c: CompositionConfig): Rect => ({ x: 0, y: 0, width: c.poster.width, height: c.poster.height });
-const keepOut = (c: CompositionConfig) => expandRect(c.protectedRegion, c.protectedInset);
+const keepOuts = (c: CompositionConfig) => [expandRect(c.protectedRegion, c.protectedInset), ...c.keepOuts];
 const ratioOf = (r: CompositionResult["placements"][number]) => r.width / r.height;
 
 /** Every geometric guarantee the engine documents, checked from the output alone. */
@@ -34,7 +34,7 @@ function expectValid(result: CompositionResult, c: CompositionConfig = CFG) {
     expect(p.bounds.width).toBeCloseTo(b.width, 6);
     expect(rectContains(poster(c), { ...p.bounds, x: p.bounds.x + 1e-6, y: p.bounds.y + 1e-6 })).toBe(true);
     expect(rectContains(c.regions[p.region]!, { ...p.bounds, x: p.bounds.x + 1e-6, y: p.bounds.y + 1e-6 })).toBe(true);
-    expect(intersectionArea(p.bounds, keepOut(c))).toBe(0);
+    for (const k of keepOuts(c)) expect(intersectionArea(p.bounds, k)).toBe(0);
     expect(Math.abs(p.rotation)).toBeLessThanOrEqual(c.maxRotationDeg + 1e-9);
   }
 }
@@ -91,6 +91,12 @@ describe("bounds and protected region", () => {
     const placements = composeSignatures(make(30)).placements.filter((p) => Math.abs(p.rotation) > 2);
     expect(placements.length).toBeGreaterThan(5);
     for (const p of placements) expect(p.bounds.width).toBeGreaterThan(p.width);
+  });
+
+  it("decorations (corner rosettes) are keep-out zones too, supplied by poster config", () => {
+    expect(CFG.keepOuts).toHaveLength(4);
+    for (const p of composeSignatures(make(150)).placements)
+      for (const k of CFG.keepOuts) expect(intersectionArea(p.bounds, k)).toBe(0);
   });
 
   it("the protected region comes from config: moving it moves the keep-out zone", () => {

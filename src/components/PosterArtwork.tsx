@@ -1,6 +1,6 @@
 import Image from "next/image";
 import greeting from "@/assets/poster/greeting.webp";
-import { GREETING_IMAGE_RECT, HEADING, POSTER, toPercentStyle } from "@/lib/poster/config";
+import { CORNER_ROSETTES, GREETING_IMAGE_RECT, HEADING, POSTER, toPercentStyle } from "@/lib/poster/config";
 
 const GOLD = "#a67c1a";
 const MAROON = "#6b1111";
@@ -40,8 +40,8 @@ export default function PosterArtwork() {
           x="31" y="31" width="1138" height="1538" rx="14" fill="none" stroke={GOLD} strokeWidth="5"
           strokeDasharray="0 16" strokeLinecap="round" opacity="0.8"
         />
-        {[[96, 96], [1104, 96], [96, 1504], [1104, 1504]].map(([x, y]) => (
-          <Rosette key={`${x}-${y}`} x={x!} y={y!} r={34} />
+        {CORNER_ROSETTES.centers.map(([x, y]) => (
+          <Rosette key={`${x}-${y}`} x={x} y={y} r={CORNER_ROSETTES.radius} />
         ))}
 
         {/* Mandala watermark behind the greeting: thin and pale so it never competes with it */}
