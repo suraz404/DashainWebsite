@@ -56,6 +56,18 @@ export function deriveSafeRegions(
 /** Greeting, heading and key decoration live here. Signature overlays must not intersect it. */
 export const PROTECTED_REGION: Rect = { x: 216, y: 320, width: 768, height: 960 };
 
+/**
+ * The framed "card" that holds the greeting: the protected region plus a small border. PosterArtwork draws
+ * its frame here, and it must sit inside the composition engine's keep-out zone (protected region + inset)
+ * so signatures never touch the frame.
+ */
+export const GREETING_CARD: Rect = {
+  x: PROTECTED_REGION.x - 8,
+  y: PROTECTED_REGION.y - 8,
+  width: PROTECTED_REGION.width + 16,
+  height: PROTECTED_REGION.height + 16,
+};
+
 /** Corner rosettes drawn by PosterArtwork. Single source of truth for artwork AND signature keep-outs. */
 export const CORNER_ROSETTES = {
   centers: [[96, 96], [1104, 96], [96, 1504], [1104, 1504]] as const,
@@ -79,12 +91,61 @@ export const GREETING_IMAGE_RECT: Rect = {
   height: Math.round((PROTECTED_REGION.width * GREETING_IMAGE_SIZE.height) / GREETING_IMAGE_SIZE.width),
 };
 
-/** Live-text heading. SVG `textLength` pins its width, so a fallback font can't make it overflow or shift. */
-export const HEADING = {
-  brand: { text: "CSITAN", x: 600, y: 372, fontSize: 30, textLength: 190 },
-  title: { text: "HAPPY DASHAIN", x: 600, y: 452, fontSize: 84, textLength: 700 },
-  ruleY: 492,
-} as const;
+/** Band at the top of the greeting card, above the greeting artwork, that holds the chapter logos. */
+export const LOGO_STRIP: Rect = { x: 232, y: 344, width: 736, height: 158 };
+
+export interface LogoSize {
+  id: string;
+  /** width ÷ height of the logo image. */
+  aspect: number;
+}
+export interface LogoTile extends LogoSize {
+  rect: Rect;
+  /** True for the featured (centre) logo. */
+  main: boolean;
+}
+
+/**
+ * Lays out a row of logo tiles inside `strip`: `main` is centred EXACTLY, `left` and `right` run outwards from
+ * it with `gap` between every tile. All non-main tiles share one height; the main tile is `mainScale` times
+ * taller. The shared height is the largest that still fits both sides inside the strip, so the row is as big
+ * as it can be without overflowing. Pure function: aspect ratios come from the images themselves.
+ */
+export function layoutLogoStrip(
+  { left, main, right }: { left: LogoSize[]; main: LogoSize; right: LogoSize[] },
+  { strip = LOGO_STRIP, gap = 16, mainScale = 1.35 }: { strip?: Rect; gap?: number; mainScale?: number } = {},
+): LogoTile[] {
+  const half = strip.width / 2;
+  const mainUnits = mainScale * main.aspect; // main width = H × mainUnits
+  const sideLimit = (side: LogoSize[]) => {
+    const units = side.reduce((sum, l) => sum + l.aspect, 0);
+    return (half - gap * side.length) / (mainUnits / 2 + units);
+  };
+  const H = Math.min(sideLimit(left), sideLimit(right), strip.height / mainScale);
+  const cy = strip.y + strip.height / 2;
+  const cx = strip.x + half;
+
+  const tile = (l: LogoSize, isMain: boolean, x: number): LogoTile => {
+    const height = isMain ? H * mainScale : H;
+    const width = l.aspect * height;
+    return { ...l, main: isMain, rect: { x, y: cy - height / 2, width, height } };
+  };
+
+  const mainW = mainUnits * H;
+  const tiles: LogoTile[] = [tile(main, true, cx - mainW / 2)];
+  let edge = cx - mainW / 2 - gap; // walk left from the main tile
+  for (const l of [...left].reverse()) {
+    const width = l.aspect * H;
+    tiles.push(tile(l, false, edge - width));
+    edge -= width + gap;
+  }
+  edge = cx + mainW / 2 + gap; // walk right
+  for (const l of right) {
+    tiles.push(tile(l, false, edge));
+    edge += l.aspect * H + gap;
+  }
+  return tiles.sort((a, b) => a.rect.x - b.rect.x);
+}
 
 export const rectsOverlap = (a: Rect, b: Rect) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;

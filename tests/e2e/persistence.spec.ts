@@ -80,7 +80,8 @@ test("a newly approved signature shows up on an open poster via polling (paginat
   try {
     await setStatus(request, id, "APPROVED");
     await page.clock.fastForward(11_000); // poll interval is 10 s
-    await expect.poll(() => overlayIds(page)).toEqual([id]);
+    // generous timeout: the first request after a cold dev-server compile can be slow
+    await expect.poll(() => overlayIds(page), { timeout: 15_000 }).toEqual([id]);
   } finally {
     await setStatus(request, id, "REJECTED");
   }
@@ -108,7 +109,7 @@ test("a failing refresh keeps what is already on the poster and does not crash",
 
 test("poster with no approved signatures renders the full predefined design (empty state)", async ({ page }) => {
   await page.goto("/poster");
-  await expect(page.getByTestId("poster-title")).toBeVisible();
+  await expect(page.getByTestId("logo-strip")).toBeVisible();
   await expect(page.locator('[data-layer="signatures"] [role="group"]')).toHaveAttribute("data-placed", "0");
   await expect(page.locator("[data-load-error]")).toHaveCount(0);
 });

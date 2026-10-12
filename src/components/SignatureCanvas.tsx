@@ -5,6 +5,8 @@ import { SignatureExportError } from "@/lib/export/errors";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
+const ghostButton =
+  "rounded-full border border-[#b8891b]/60 bg-white/80 px-5 py-2.5 font-medium text-[#6b3a10] transition hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f6fa3] disabled:cursor-not-allowed disabled:opacity-40";
 const W = 800; // internal resolution; CSS scales it
 const H = 400;
 
@@ -96,12 +98,14 @@ export default function SignatureCanvas() {
   return (
     <div className="flex w-full max-w-2xl flex-col gap-4">
       {/* Checker background is CSS only — the canvas pixels themselves stay transparent. */}
-      <div className="rounded-xl border-2 border-dashed border-red-800/40 bg-white shadow-sm">
+      <div className="relative rounded-2xl bg-white p-2 shadow-[0_18px_45px_-14px_rgba(90,40,10,0.4)] ring-2 ring-[#b8891b]/50 sm:p-3">
+        {/* signing line: pure CSS, so the canvas itself stays transparent */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[8%] bottom-[22%] border-b-2 border-dashed border-[#b3262e]/25" />
         <canvas
           ref={canvasRef}
           width={W}
           height={H}
-          className="aspect-[2/1] w-full touch-none cursor-crosshair"
+          className="relative aspect-[2/1] w-full touch-none cursor-crosshair"
           onPointerDown={down}
           onPointerMove={move}
           onPointerUp={up}
@@ -109,18 +113,18 @@ export default function SignatureCanvas() {
         />
       </div>
       <div className="flex gap-3">
-        <button onClick={undo} disabled={!count} className="rounded-lg border px-4 py-2 disabled:opacity-40">Undo</button>
-        <button onClick={clear} disabled={!count} className="rounded-lg border px-4 py-2 disabled:opacity-40">Clear</button>
+        <button onClick={undo} disabled={!count} className={ghostButton}>Undo</button>
+        <button onClick={clear} disabled={!count} className={ghostButton}>Clear</button>
         <button
           onClick={submit}
           disabled={!count || state === "sending"}
-          className="ml-auto rounded-lg bg-red-700 px-6 py-2 font-semibold text-white disabled:opacity-40"
+          className="ml-auto rounded-full bg-[#b3262e] px-7 py-2.5 font-semibold text-white shadow-md transition hover:bg-[#8f1d24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f6fa3] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[#b3262e]"
         >
           {state === "sending" ? "Sending…" : "Submit"}
         </button>
       </div>
       {(state === "done" || state === "error") && (
-        <p role="status" className={state === "done" ? "text-green-700" : "text-red-700"}>{message}</p>
+        <p role="status" className={`rounded-xl px-4 py-3 text-sm font-medium ${state === "done" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>{message}</p>
       )}
     </div>
   );

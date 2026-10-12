@@ -12,11 +12,12 @@ export default function PosterFrame({ children }: { children?: ReactNode }) {
   return (
     <div
       data-poster
-      className="relative w-full overflow-hidden rounded-lg shadow-2xl"
-      style={{ aspectRatio: `${POSTER.width} / ${POSTER.height}` }}
+      className="relative w-full overflow-hidden rounded-xl shadow-[0_20px_50px_-12px_rgba(90,40,10,0.45)] ring-1 ring-[#b8891b]/40"
+      // container-type lets children size things in `cqw` (1% of poster width) so details scale with the poster
+      style={{ aspectRatio: `${POSTER.width} / ${POSTER.height}`, containerType: "inline-size" }}
     >
-      <h1 className="sr-only">Happy Dashain from CSITAN, Computer Science and Information Technology Association of Nepal</h1>
-      <div data-layer="artwork" className="absolute inset-0 isolate bg-[#fbf3e4]">
+      <h1 className="sr-only">Happy Dashain from the CSIT Association of Nepal, Rupandehi chapter</h1>
+      <div data-layer="artwork" className="absolute inset-0 isolate bg-[#fdf4e1]">
         <PosterArtwork />
       </div>
       <div data-layer="signatures" className="absolute inset-0 z-10">

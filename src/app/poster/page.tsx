@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LayoutDebugLayer from "@/components/LayoutDebugLayer";
 import PosterFrame from "@/components/PosterFrame";
 import PosterSignatures from "@/components/PosterSignatures";
@@ -37,7 +38,7 @@ export default async function PosterPage({
   const initial = fixtures.length ? fixtures : real;
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center gap-2 bg-neutral-900 p-2">
+    <main className="flex min-h-svh flex-col items-center gap-4 bg-gradient-to-b from-[#fbf3e4] to-[#efd9b0] px-3 py-4 sm:px-6 sm:py-6">
       {fixtures.length > 0 && (
         <p className="rounded bg-amber-300 px-2 py-1 text-xs font-semibold text-black" data-dev-banner>
           DEV FIXTURES: {fixtures.length} fake signatures. Not real submissions.
@@ -48,13 +49,21 @@ export default async function PosterPage({
           Signatures couldn&apos;t be loaded right now. Please refresh in a moment.
         </p>
       )}
-      {/* Width is capped so the 3:4 poster always fits the screen height too. */}
-      <div className="w-full" style={{ maxWidth: "min(100%, calc((100svh - 1rem) * 0.75))" }}>
+      {/* Fills the width on phones; on tall/short screens it is capped so poster + button fit the height
+          (never below 20rem, so a landscape phone scrolls instead of shrinking the poster to nothing). */}
+      <div className="w-full" style={{ maxWidth: "min(100%, max(20rem, calc((100svh - 7rem) * 0.75)))" }}>
         <PosterFrame>
           <PosterSignatures initial={initial} poll={fixtures.length === 0} />
           {debug && <LayoutDebugLayer result={composeSignatures(initial)} />}
         </PosterFrame>
       </div>
+      <Link
+        href="/"
+        data-testid="add-signature"
+        className="rounded-full bg-[#b3262e] px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:bg-[#8f1d24] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f6fa3]"
+      >
+        Add your signature
+      </Link>
     </main>
   );
 }

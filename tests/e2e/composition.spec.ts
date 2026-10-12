@@ -102,7 +102,7 @@ test("a real submitted PNG appears on the poster at its own aspect ratio", async
     expect((box!.w * 1200) / (box!.h * 1600)).toBeCloseTo(300 / 120, 1);
     // exactly one overlay, no fixtures leaked in, and the artwork layer still has only its greeting image
     await expect(page.locator("[data-signature-id]")).toHaveCount(1);
-    await expect(page.locator('[data-layer="artwork"] img')).toHaveCount(1);
+    await expect(page.locator('[data-layer="artwork"] img')).toHaveCount(6); // greeting + 5 logos, no signature
     await expect(page.locator("[data-dev-banner]")).toHaveCount(0);
   } finally {
     // Leave the shared test store empty for other specs.

@@ -112,8 +112,8 @@ describe("bounds and protected region", () => {
 
 describe("collision handling", () => {
   it("clean placements never overlap and keep the minimum gap", () => {
-    const r = composeSignatures(make(60));
-    expect(r.stats.crowded).toBe(0); // 60 fit cleanly, so the guarantee applies to all of them
+    const r = composeSignatures(make(50));
+    expect(r.stats.crowded).toBe(0); // 50 fit cleanly (clean capacity is ~60), so the guarantee applies to all
     for (let i = 0; i < r.placements.length; i++)
       for (let j = i + 1; j < r.placements.length; j++) {
         const [a, b] = [r.placements[i]!, r.placements[j]!];

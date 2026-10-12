@@ -8,6 +8,8 @@ import type { CompositionConfig } from "./types";
  * - minScale 0.45 → smallest signature is ~95 units wide: still readable on a large screen, and it roughly
  *   doubles capacity when the poster gets crowded.
  * - posterEdgeInset 48: the decorative double border sits at 22–40, so signatures stay inside it.
+ * - protectedInset 18: the greeting card frame sits 8 units outside the protected region; 18 leaves a
+ *   10-unit gap between the frame (and its marigolds) and the nearest signature.
  * - minGap 8: visible breathing room, bigger than the 8-unit transparent padding the exporter adds.
  * - 48 attempts × 4 regions × 3 tiers keeps each placement ≤ ~600 candidate checks.
  */
@@ -21,7 +23,7 @@ export const DEFAULT_COMPOSITION_CONFIG: CompositionConfig = {
   minScale: 0.45,
   maxRotationDeg: 6,
   posterEdgeInset: 48,
-  protectedInset: 12,
+  protectedInset: 18,
   minGap: 8,
   maxAttemptsPerRegion: 48,
   maxOverlapRatio: 0.3,
