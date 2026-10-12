@@ -23,6 +23,7 @@ export default defineConfig({
       STORAGE_DIR: ".test-storage",
       ADMIN_TOKEN: "test-admin-token",
       SUBMIT_RATE_LIMIT_MAX: "1000",
+      AUTO_APPROVE_SIGNATURES: "false", // most tests exercise the moderation flow; auto-approve has its own tests
     },
   },
 });

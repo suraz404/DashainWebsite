@@ -8,6 +8,8 @@ const schema = z.object({
   ALLOW_LOCAL_STORAGE_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),
   /** Optional: with no token set, nobody can moderate (safe default). */
   ADMIN_TOKEN: z.string().min(8, "ADMIN_TOKEN must be at least 8 characters").optional(),
+  /** "true": new signatures go live immediately (admins can still reject). "false": they wait as PENDING for approval. */
+  AUTO_APPROVE_SIGNATURES: z.enum(["true", "false"]).default("true"),
   SUBMIT_RATE_LIMIT_MAX: z.coerce.number().int().min(1).max(1000).default(5),
 });
 

@@ -34,6 +34,7 @@ Both database options use `postgresql://csitan:csitan@localhost:5544/csitan_dash
 |---|---|
 | `DATABASE_URL` | PostgreSQL connection string (required) |
 | `STORAGE_DRIVER` / `STORAGE_DIR` | Where PNGs are stored (`local` → `./storage`) |
+| `AUTO_APPROVE_SIGNATURES` | `true` (default) = live immediately, `false` = needs admin approval |
 | `ADMIN_TOKEN` | Secret for moderation (≥ 8 chars). Unset = nobody can moderate |
 | `SUBMIT_RATE_LIMIT_MAX` | Submissions per IP per minute (default 5) |
 | `ALLOW_LOCAL_STORAGE_IN_PRODUCTION` | Safety latch, see below |
@@ -53,7 +54,12 @@ PNG bytes are **not** in the database. PostgreSQL stores only the storage key an
 
 ## Moderation (approval workflow)
 
-New submissions are always `PENDING`. Nothing is public until approved.
+`AUTO_APPROVE_SIGNATURES` decides where a new signature starts:
+
+- `true` (default): it is `APPROVED` immediately and appears on the poster. Admins can still **reject** anything afterwards.
+- `false`: it starts `PENDING` and stays hidden until an admin approves it.
+
+Either way the server validates every image first. Note that with auto-approve on, anyone who can reach `/` can put an image on the poster, so keep an eye on `/admin` (or switch to `false` for a public event).
 
 - UI: open `/admin`, enter `ADMIN_TOKEN`, click Load, then Approve/Reject (previews work for pending images).
 - API: `PATCH /api/signatures/:id` with header `x-admin-token` and body `{"status":"APPROVED"}`; queue: `GET /api/admin?status=PENDING`.
@@ -61,7 +67,7 @@ New submissions are always `PENDING`. Nothing is public until approved.
 
 ## API
 
-- `POST /api/signatures` — multipart field `signature` (PNG). `201 {id, status:"PENDING"}`, `400` invalid image, `413` too large, `429` rate limited, `500` storage/database failure.
+- `POST /api/signatures` — multipart field `signature` (PNG). `201 {id, status:"APPROVED"|"PENDING"}`, `400` invalid image, `413` too large, `429` rate limited, `500` storage/database failure.
 - `GET /api/signatures?page=1&limit=50` — APPROVED only, oldest first. `limit` 1–100. Returns `{items:[{id,width,height,createdAt}], page, limit, total, hasMore}`.
 - `GET /api/signatures/:id` — the PNG (approved only; admins can preview others).
 

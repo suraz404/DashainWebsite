@@ -62,6 +62,37 @@ describe("submit: successful persistence", () => {
   });
 });
 
+describe("submit: auto-approve", () => {
+  const auto = createSignatureService({ db, storage, autoApprove: true, log: { error: () => undefined } });
+
+  it("autoApprove on → the signature is APPROVED immediately and listed publicly", async () => {
+    const { id, status } = await auto.submit(makePng());
+    expect(status).toBe("APPROVED");
+    expect((await db.signature.findUniqueOrThrow({ where: { id } })).status).toBe("APPROVED");
+    expect((await auto.listApproved({ page: 1, limit: 10 })).items.map((s) => s.id)).toEqual([id]);
+    expect(await auto.getImage(id)).not.toBeNull();
+  });
+
+  it("autoApprove off (the default) → PENDING and not listed", async () => {
+    const { id, status } = await service.submit(makePng());
+    expect(status).toBe("PENDING");
+    expect((await service.listApproved({ page: 1, limit: 10 })).items).toEqual([]);
+    expect((await db.signature.findUniqueOrThrow({ where: { id } })).status).toBe("PENDING");
+  });
+
+  it("an admin can still reject an auto-approved signature, and it disappears", async () => {
+    const { id } = await auto.submit(makePng());
+    await auto.setStatus(id, "REJECTED");
+    expect((await auto.listApproved({ page: 1, limit: 10 })).items).toEqual([]);
+    expect(await auto.getImage(id)).toBeNull();
+  });
+
+  it("invalid images are still rejected (auto-approve skips moderation, not validation)", async () => {
+    await expect(auto.submit(Buffer.from("not an image at all, sorry"))).rejects.toBeInstanceOf(InvalidImageError);
+    expect(await db.signature.count()).toBe(0);
+  });
+});
+
 describe("submit: invalid images persist nothing", () => {
   const cases: [string, () => Buffer, number][] = [
     ["not a PNG", () => Buffer.from("hello world, not an image at all!!"), 400],

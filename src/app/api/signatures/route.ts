@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   }
 }
 
-/** POST /api/signatures — multipart form with a `signature` PNG file. New signatures are always PENDING. */
+/** POST /api/signatures — multipart form with a `signature` PNG file. Starts APPROVED or PENDING per AUTO_APPROVE_SIGNATURES. */
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
   if (!rateLimit(`submit:${ip}`, getEnv().SUBMIT_RATE_LIMIT_MAX)) {

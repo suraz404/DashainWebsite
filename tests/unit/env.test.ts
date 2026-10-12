@@ -19,7 +19,9 @@ afterEach(() => {
 
 describe("environment validation", () => {
   it("applies safe defaults", () => {
-    expect(getEnv()).toMatchObject({ STORAGE_DRIVER: "local", STORAGE_DIR: "./storage", SUBMIT_RATE_LIMIT_MAX: 5 });
+    expect(getEnv()).toMatchObject({
+      STORAGE_DRIVER: "local", STORAGE_DIR: "./storage", SUBMIT_RATE_LIMIT_MAX: 5, AUTO_APPROVE_SIGNATURES: "true",
+    });
   });
 
   it("fails with a readable message when DATABASE_URL is missing or not postgres", () => {

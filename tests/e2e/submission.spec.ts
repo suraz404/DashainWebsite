@@ -30,6 +30,17 @@ test("loading state: button shows Sending…, is disabled, and drawing is locked
   await expect(page.getByRole("button", { name: "Submit" })).toBeDisabled(); // canvas empty: the extra stroke never existed
 });
 
+test("success state with auto-approve: confirmation says it is already on the poster", async ({ page }) => {
+  await page.route("**/api/signatures", (route) =>
+    route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ id: "x", status: "APPROVED" }) }),
+  );
+  await page.goto("/");
+  await scribble(page);
+  await page.getByRole("button", { name: /Submit/ }).click();
+  await expect(page.getByRole("status")).toContainText("now on the poster");
+  await expect(page.getByRole("status")).not.toContainText(/once approved/i);
+});
+
 test("success state: confirmation says it awaits approval, and the canvas is cleared", async ({ page }) => {
   let sent: Buffer | null = null;
   await page.route("**/api/signatures", async (route) => {

@@ -78,8 +78,12 @@ export default function SignatureCanvas() {
     }
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      // Submissions are moderated: a new signature is PENDING until an admin approves it.
-      setMessage("Thank you! Your signature was received and will appear on the poster once approved.");
+      // Depends on server config: approved signatures are live at once, otherwise they wait for a moderator.
+      setMessage(
+        data.status === "APPROVED"
+          ? "Thank you! Your signature is now on the poster."
+          : "Thank you! Your signature was received and will appear on the poster once approved.",
+      );
       setState("done");
       clear(); // only on success
     } else {

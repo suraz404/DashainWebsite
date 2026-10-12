@@ -112,6 +112,38 @@ describe("POST /api/signatures", () => {
   });
 });
 
+describe("AUTO_APPROVE_SIGNATURES=true (signatures go live at once)", () => {
+  it("POST returns APPROVED and the signature is immediately in the public list and image route", async () => {
+    const restore = withEnv({ AUTO_APPROVE_SIGNATURES: "true" });
+    try {
+      const png = makePng({ width: 450, height: 190 });
+      const res = await submitRoute(postRequest(png));
+      expect(res.status).toBe(201);
+      const { id, status } = await json(res);
+      expect(status).toBe("APPROVED");
+
+      const list = await json(await listRoute(getRequest("/api/signatures")));
+      expect(list.items.map((s: { id: string }) => s.id)).toEqual([id]);
+      expect(list.items[0]).toMatchObject({ width: 450, height: 190 });
+      const img = await imageRoute(getRequest(`/api/signatures/${id}`), ctx(id));
+      expect(img.status).toBe(200);
+      expect(Buffer.from(await img.arrayBuffer()).equals(png)).toBe(true);
+    } finally {
+      restore();
+    }
+  });
+
+  it("invalid uploads are still rejected and never listed", async () => {
+    const restore = withEnv({ AUTO_APPROVE_SIGNATURES: "true" });
+    try {
+      expect((await submitRoute(postRequest(Buffer.from("definitely not a png")))).status).toBe(400);
+      expect((await json(await listRoute(getRequest("/api/signatures")))).total).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+});
+
 describe("GET /api/signatures", () => {
   it("returns APPROVED only, with public fields and no internal storage details", async () => {
     const a = await submitOk();

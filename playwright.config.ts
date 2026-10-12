@@ -21,6 +21,7 @@ export default defineConfig({
       STORAGE_DIR: E2E_STORAGE_DIR,
       ADMIN_TOKEN: E2E_ADMIN_TOKEN,
       SUBMIT_RATE_LIMIT_MAX: "1000",
+      AUTO_APPROVE_SIGNATURES: "false", // e2e exercises the moderation flow (auto-approve is covered by integration tests)
     },
   },
 });
