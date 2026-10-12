@@ -3,8 +3,12 @@ import { z } from "zod";
 
 const schema = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, "DATABASE_URL must be a postgresql:// connection string"),
-  STORAGE_DRIVER: z.enum(["local"]).default("local"),
+  STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
   STORAGE_DIR: z.string().min(1).default("./storage"),
+  /** Supabase Storage (STORAGE_DRIVER=supabase). The service-role key is a server-only secret. */
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default("signatures"),
   ALLOW_LOCAL_STORAGE_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),
   /** Optional: with no token set, nobody can moderate (safe default). */
   ADMIN_TOKEN: z.string().min(8, "ADMIN_TOKEN must be at least 8 characters").optional(),
@@ -14,6 +18,12 @@ const schema = z.object({
 });
 
 export type Env = z.infer<typeof schema>;
+const withStorage = schema.superRefine((e, ctx) => {
+  if (e.STORAGE_DRIVER !== "supabase") return;
+  for (const k of ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"] as const) {
+    if (!e[k]) ctx.addIssue({ code: "custom", path: [k], message: "required when STORAGE_DRIVER=supabase" });
+  }
+});
 let cached: Env | undefined;
 
 /**
@@ -22,7 +32,7 @@ let cached: Env | undefined;
  */
 export function getEnv(): Env {
   if (!cached) {
-    const parsed = schema.safeParse(process.env);
+    const parsed = withStorage.safeParse(process.env);
     if (!parsed.success) {
       const problems = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
       throw new Error(`Invalid environment configuration — ${problems}`);
