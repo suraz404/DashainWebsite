@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   GREETING_IMAGE_RECT, GREETING_IMAGE_SIZE, HEADING, POSTER, PROTECTED_REGION, SAFE_REGIONS,
-  rectContains, rectsOverlap, toPercentStyle, type Rect,
+  deriveSafeRegions, rectContains, rectsOverlap, toPercentStyle, type Rect,
 } from "@/lib/poster/config";
-import { SLOTS } from "@/lib/poster-layout";
 
 const safe = Object.entries(SAFE_REGIONS) as [string, Rect][];
 const area = (r: Rect) => r.width * r.height;
@@ -48,16 +47,7 @@ describe("poster coordinate system", () => {
     });
   });
 
-  it("existing signature slots (% of poster) never enter the protected region", () => {
-    const pct = (r: Rect): Rect => ({
-      x: (r.x / POSTER.width) * 100, y: (r.y / POSTER.height) * 100,
-      width: (r.width / POSTER.width) * 100, height: (r.height / POSTER.height) * 100,
-    });
-    const protectedPct = pct(PROTECTED_REGION);
-    for (const s of SLOTS) {
-      // slot width w% of poster width; signature aspect ≈ 2:1 → height = w/2 % of width = w/2 * (1200/1600) % of height
-      const height = (s.w / 2) * (POSTER.width / POSTER.height);
-      expect(rectsOverlap({ x: s.x, y: s.y, width: s.w, height }, protectedPct)).toBe(false);
-    }
+  it("deriveSafeRegions reproduces the declared safe regions", () => {
+    expect(deriveSafeRegions(POSTER, PROTECTED_REGION)).toEqual(SAFE_REGIONS);
   });
 });

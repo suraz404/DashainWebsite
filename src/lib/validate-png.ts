@@ -22,3 +22,9 @@ export function validatePng(buf: Buffer) {
     hasAlpha: isPng && buf[25] === 6, // colour type 6 = RGBA
   });
 }
+
+/** Reads width/height from a PNG's IHDR chunk (bytes 16–23). Returns null if it isn't a PNG. */
+export function readPngSize(buf: Buffer): { width: number; height: number } | null {
+  if (buf.length < 24 || !buf.subarray(0, 8).equals(MAGIC)) return null;
+  return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20) };
+}

@@ -36,6 +36,23 @@ export const SAFE_REGIONS = {
   right: { x: 984, y: 320, width: 216, height: 960 },
 } as const satisfies Record<string, Rect>;
 
+/**
+ * Splits a poster into the four signature bands around a protected centre (top/bottom span the full width,
+ * left/right fill the gap between them). Lets the composition engine work for other poster shapes too.
+ */
+export function deriveSafeRegions(
+  poster: { width: number; height: number },
+  protectedRegion: Rect,
+): Record<"top" | "bottom" | "left" | "right", Rect> {
+  const { x, y, width, height } = protectedRegion;
+  return {
+    top: { x: 0, y: 0, width: poster.width, height: y },
+    bottom: { x: 0, y: y + height, width: poster.width, height: poster.height - (y + height) },
+    left: { x: 0, y, width: x, height },
+    right: { x: x + width, y, width: poster.width - (x + width), height },
+  };
+}
+
 /** Greeting, heading and key decoration live here. Signature overlays must not intersect it. */
 export const PROTECTED_REGION: Rect = { x: 216, y: 320, width: 768, height: 960 };
 

@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { addSignature, listSignatures } from "@/lib/signature-store";
+import { addSignature, listPosterSignatures } from "@/lib/signature-store";
 import { validatePng } from "@/lib/validate-png";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const approved = await listSignatures("approved");
-  return NextResponse.json(approved.map((s) => s.id));
+  return NextResponse.json(await listPosterSignatures());
 }
 
 export async function POST(req: Request) {

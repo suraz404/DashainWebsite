@@ -2,9 +2,10 @@ import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
+import { readPngSize } from "./validate-png";
 
 export type Status = "pending" | "approved" | "rejected";
-export type SignatureMeta = { id: string; status: Status; createdAt: string };
+export type SignatureMeta = { id: string; status: Status; createdAt: string; width?: number; height?: number };
 
 // SIGNATURE_DATA_DIR lets tests use an isolated, empty store.
 const DIR = path.resolve(/*turbopackIgnore: true*/ process.cwd(), process.env.SIGNATURE_DATA_DIR ?? "data");
@@ -32,7 +33,8 @@ export const listSignatures = async (status?: Status) =>
 export const addSignature = (png: Buffer, status: Status) =>
   locked(async () => {
     await fs.mkdir(DIR, { recursive: true });
-    const meta: SignatureMeta = { id: randomUUID(), status, createdAt: new Date().toISOString() };
+    const size = readPngSize(png);
+    const meta: SignatureMeta = { id: randomUUID(), status, createdAt: new Date().toISOString(), ...size };
     await fs.writeFile(path.join(DIR, `${meta.id}.png`), png);
     await fs.writeFile(INDEX, JSON.stringify([...(await readAll()), meta], null, 2));
     return meta;
@@ -55,4 +57,23 @@ export async function readPng(id: string): Promise<Buffer | null> {
   } catch {
     return null;
   }
+}
+
+export type PosterSignature = { id: string; width: number; height: number; createdAt: string };
+
+/** Approved signatures with intrinsic size, for the composition engine. Older records get size from the PNG header. */
+export async function listPosterSignatures(): Promise<PosterSignature[]> {
+  const approved = await listSignatures("approved");
+  const out: PosterSignature[] = [];
+  for (const s of approved) {
+    let { width, height } = s;
+    if (!width || !height) {
+      const png = await readPng(s.id);
+      const size = png && readPngSize(png);
+      if (!size) continue; // file missing/corrupt: nothing to draw
+      ({ width, height } = size);
+    }
+    out.push({ id: s.id, width, height, createdAt: s.createdAt });
+  }
+  return out;
 }
