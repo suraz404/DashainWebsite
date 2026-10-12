@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local signature storage
+/data
+.env.local
+
+/test-results
+/playwright-report
+/.next-e2e
