@@ -26,7 +26,11 @@ export interface Rect {
   height: number;
 }
 
-export const POSTER = { width: 1200, height: 1600, aspectRatio: 3 / 4 } as const;
+export const POSTER = {
+  width: 1200,
+  height: 1600,
+  aspectRatio: 3 / 4,
+} as const;
 
 /** Margins reserved for signatures. Together with PROTECTED_REGION they tile the whole poster exactly. */
 export const SAFE_REGIONS = {
@@ -47,14 +51,24 @@ export function deriveSafeRegions(
   const { x, y, width, height } = protectedRegion;
   return {
     top: { x: 0, y: 0, width: poster.width, height: y },
-    bottom: { x: 0, y: y + height, width: poster.width, height: poster.height - (y + height) },
+    bottom: {
+      x: 0,
+      y: y + height,
+      width: poster.width,
+      height: poster.height - (y + height),
+    },
     left: { x: 0, y, width: x, height },
     right: { x: x + width, y, width: poster.width - (x + width), height },
   };
 }
 
 /** Greeting, heading and key decoration live here. Signature overlays must not intersect it. */
-export const PROTECTED_REGION: Rect = { x: 216, y: 320, width: 768, height: 960 };
+export const PROTECTED_REGION: Rect = {
+  x: 216,
+  y: 320,
+  width: 768,
+  height: 960,
+};
 
 /**
  * The framed "card" that holds the greeting: the protected region plus a small border. PosterArtwork draws
@@ -70,15 +84,22 @@ export const GREETING_CARD: Rect = {
 
 /** Corner rosettes drawn by PosterArtwork. Single source of truth for artwork AND signature keep-outs. */
 export const CORNER_ROSETTES = {
-  centers: [[96, 96], [1104, 96], [96, 1504], [1104, 1504]] as const,
+  centers: [
+    [96, 96],
+    [1104, 96],
+    [96, 1504],
+    [1104, 1504],
+  ] as const,
   radius: 34,
 };
 
 /** Decorations signatures must not cover (rosette + 12-unit margin). Fed to the composition engine. */
-export const DECORATION_KEEP_OUTS: Rect[] = CORNER_ROSETTES.centers.map(([cx, cy]) => {
-  const half = CORNER_ROSETTES.radius + 12;
-  return { x: cx - half, y: cy - half, width: half * 2, height: half * 2 };
-});
+export const DECORATION_KEEP_OUTS: Rect[] = CORNER_ROSETTES.centers.map(
+  ([cx, cy]) => {
+    const half = CORNER_ROSETTES.radius + 12;
+    return { x: cx - half, y: cy - half, width: half * 2, height: half * 2 };
+  },
+);
 
 /** Intrinsic size of src/assets/poster/greeting.webp (trimmed from the supplied artwork). */
 export const GREETING_IMAGE_SIZE = { width: 2400, height: 2327 } as const;
@@ -88,7 +109,10 @@ export const GREETING_IMAGE_RECT: Rect = {
   x: PROTECTED_REGION.x,
   y: 520,
   width: PROTECTED_REGION.width,
-  height: Math.round((PROTECTED_REGION.width * GREETING_IMAGE_SIZE.height) / GREETING_IMAGE_SIZE.width),
+  height: Math.round(
+    (PROTECTED_REGION.width * GREETING_IMAGE_SIZE.height) /
+      GREETING_IMAGE_SIZE.width,
+  ),
 };
 
 /** Band at the top of the greeting card, above the greeting artwork, that holds the chapter logos. */
@@ -112,8 +136,16 @@ export interface LogoTile extends LogoSize {
  * as it can be without overflowing. Pure function: aspect ratios come from the images themselves.
  */
 export function layoutLogoStrip(
-  { left, main, right }: { left: LogoSize[]; main: LogoSize; right: LogoSize[] },
-  { strip = LOGO_STRIP, gap = 16, mainScale = 1.35 }: { strip?: Rect; gap?: number; mainScale?: number } = {},
+  {
+    left,
+    main,
+    right,
+  }: { left: LogoSize[]; main: LogoSize; right: LogoSize[] },
+  {
+    strip = LOGO_STRIP,
+    gap = 16,
+    mainScale = 1.35,
+  }: { strip?: Rect; gap?: number; mainScale?: number } = {},
 ): LogoTile[] {
   const half = strip.width / 2;
   const mainUnits = mainScale * main.aspect; // main width = H × mainUnits
@@ -121,14 +153,22 @@ export function layoutLogoStrip(
     const units = side.reduce((sum, l) => sum + l.aspect, 0);
     return (half - gap * side.length) / (mainUnits / 2 + units);
   };
-  const H = Math.min(sideLimit(left), sideLimit(right), strip.height / mainScale);
+  const H = Math.min(
+    sideLimit(left),
+    sideLimit(right),
+    strip.height / mainScale,
+  );
   const cy = strip.y + strip.height / 2;
   const cx = strip.x + half;
 
   const tile = (l: LogoSize, isMain: boolean, x: number): LogoTile => {
     const height = isMain ? H * mainScale : H;
     const width = l.aspect * height;
-    return { ...l, main: isMain, rect: { x, y: cy - height / 2, width, height } };
+    return {
+      ...l,
+      main: isMain,
+      rect: { x, y: cy - height / 2, width, height },
+    };
   };
 
   const mainW = mainUnits * H;
@@ -148,7 +188,10 @@ export function layoutLogoStrip(
 }
 
 export const rectsOverlap = (a: Rect, b: Rect) =>
-  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  a.x < b.x + b.width &&
+  b.x < a.x + a.width &&
+  a.y < b.y + b.height &&
+  b.y < a.y + a.height;
 
 export const rectContains = (outer: Rect, inner: Rect) =>
   inner.x >= outer.x &&
