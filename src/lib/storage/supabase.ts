@@ -36,6 +36,11 @@ export class SupabaseStorage implements StorageAdapter {
       cache: "no-store",
     });
     if (!res.ok) throw new Error(`Supabase upload failed (${res.status}): ${await res.text().catch(() => "")}`);
+    // The Storage API answers JSON. HTML means SUPABASE_URL points somewhere else (e.g. the dashboard),
+    // which also returns 200 — without this check the upload would "succeed" and store nothing.
+    if (!res.headers.get("content-type")?.includes("application/json")) {
+      throw new Error("Supabase upload got a non-API response; check SUPABASE_URL (https://<ref>.supabase.co)");
+    }
   }
 
   async get(key: string): Promise<Buffer | null> {
@@ -43,6 +48,9 @@ export class SupabaseStorage implements StorageAdapter {
     // Supabase answers a missing object with 400 or 404 depending on version.
     if (res.status === 404 || res.status === 400) return null;
     if (!res.ok) throw new Error(`Supabase download failed (${res.status})`);
+    if (res.headers.get("content-type")?.includes("text/html")) {
+      throw new Error("Supabase download got an HTML page; check SUPABASE_URL (https://<ref>.supabase.co)");
+    }
     return Buffer.from(await res.arrayBuffer());
   }
 

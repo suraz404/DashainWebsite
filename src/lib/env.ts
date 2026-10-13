@@ -6,7 +6,13 @@ const schema = z.object({
   STORAGE_DRIVER: z.enum(["local", "supabase"]).default("local"),
   STORAGE_DIR: z.string().min(1).default("./storage"),
   /** Supabase Storage (STORAGE_DRIVER=supabase). The service-role key is a server-only secret. */
-  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_URL: z
+    .string()
+    .url()
+    .refine((u) => !/^https?:\/\/(app\.)?supabase\.com\//.test(u), {
+      message: "use the project API URL (https://<ref>.supabase.co), not the dashboard URL",
+    })
+    .optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
   SUPABASE_STORAGE_BUCKET: z.string().min(1).default("signatures"),
   ALLOW_LOCAL_STORAGE_IN_PRODUCTION: z.enum(["true", "false"]).default("false"),

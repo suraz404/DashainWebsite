@@ -2,6 +2,7 @@
 
 import { exportSignaturePng } from "@/lib/export/export-signature";
 import { SignatureExportError } from "@/lib/export/errors";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Point = { x: number; y: number };
@@ -14,6 +15,7 @@ export default function SignatureCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokes = useRef<Point[][]>([]);
   const drawing = useRef(false);
+  const router = useRouter();
   const [count, setCount] = useState(0);
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [message, setMessage] = useState("");
@@ -88,6 +90,7 @@ export default function SignatureCanvas() {
       );
       setState("done");
       clear(); // only on success
+      router.push("/poster");
     } else {
       // Keep the drawing so nothing is lost.
       setMessage(`${data.error ?? "Something went wrong."} Your signature is still here.`);
