@@ -1,4 +1,28 @@
+"use client";
+
+import { useEffect, useRef, useState, type ImgHTMLAttributes } from "react";
 import type { CompositionResult } from "@/lib/composition/types";
+
+/**
+ * A signature whose file is gone (deleted, or never stored) would show the browser's broken-image box.
+ * Hide it instead. Also checks on mount, because an error that fires before hydration has no onError handler.
+ * The mount check uses decode(), not `complete && naturalWidth === 0`: a lazy image that hasn't started
+ * loading yet also looks like that, and would be hidden by mistake. decode() waits, and rejects only if broken.
+ */
+function SignatureImage(props: ImgHTMLAttributes<HTMLImageElement>) {
+  const ref = useRef<HTMLImageElement>(null);
+  const [broken, setBroken] = useState(false);
+  useEffect(() => {
+    let live = true;
+    ref.current?.decode().catch(() => live && setBroken(true));
+    return () => {
+      live = false;
+    };
+  }, [props.src]);
+  if (broken) return null;
+  // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+  return <img ref={ref} {...props} onError={() => setBroken(true)} />;
+}
 
 /**
  * Pure presentation of a composition result: one transparent <img> per placement.
@@ -20,8 +44,7 @@ export default function SignatureOverlay({ result }: { result: CompositionResult
       className="absolute inset-0"
     >
       {result.placements.map((p) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <SignatureImage
           key={p.id}
           src={p.src}
           alt=""

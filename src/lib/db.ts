@@ -10,7 +10,9 @@ const globalForDb = globalThis as unknown as { __csitanDb?: PrismaClient };
 export function getDb(): PrismaClient {
   globalForDb.__csitanDb ??= new PrismaClient({
     // Prisma 7 talks to Postgres through a driver adapter.
-    adapter: new PrismaPg({ connectionString: getEnv().DATABASE_URL }),
+    // Small pool + a connect timeout: a burst of poster image requests must queue here instead of exhausting
+    // a hosted pooler's client limit (Supabase's session pooler allows only 15 in total) and failing with 500s.
+    adapter: new PrismaPg({ connectionString: getEnv().DATABASE_URL, max: 5, connectionTimeoutMillis: 10_000 }),
   });
   return globalForDb.__csitanDb;
 }

@@ -138,6 +138,25 @@ export function createSignatureService({ db, storage, autoApprove = false, log =
       const row = await db.signature.findUnique({ where: { id } });
       return row ? { ...toPublic(row), status: row.status } : null;
     },
+
+    /**
+     * Permanently removes a signature: row first (so it leaves the poster and lists at once), then the file.
+     * A failed file delete is logged, not thrown — the signature is already gone for everyone, and an
+     * orphaned file is harmless. Returns false when there was nothing to delete.
+     */
+    async remove(id: string): Promise<boolean> {
+      if (!uuid.safeParse(id).success) return false;
+      const row = await db.signature.findUnique({ where: { id } });
+      if (!row) return false;
+      const { count } = await db.signature.deleteMany({ where: { id } });
+      if (count === 0) return false; // deleted concurrently
+      try {
+        await storage.delete(row.storageKey);
+      } catch (err) {
+        log.error(`[signatures] orphaned file after delete: ${row.storageKey}`, err);
+      }
+      return true;
+    },
   };
 }
 

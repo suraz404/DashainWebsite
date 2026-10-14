@@ -46,3 +46,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
     return NextResponse.json({ error: "Could not update the signature." }, { status: 500 });
   }
 }
+
+/** DELETE /api/signatures/:id — admin-only: removes the record and its image for good. */
+export async function DELETE(req: Request, { params }: Ctx) {
+  if (!isAdmin(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const removed = await getSignatureService().remove((await params).id);
+    return removed ? new NextResponse(null, { status: 204 }) : NextResponse.json({ error: "Not found" }, { status: 404 });
+  } catch (err) {
+    console.error("[signatures] delete failed", err);
+    return NextResponse.json({ error: "Could not delete the signature." }, { status: 500 });
+  }
+}

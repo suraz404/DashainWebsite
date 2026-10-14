@@ -1,6 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { GET as listRoute, POST as submitRoute } from "@/app/api/signatures/route";
-import { GET as imageRoute, PATCH as patchRoute } from "@/app/api/signatures/[id]/route";
+import { DELETE as deleteRoute, GET as imageRoute, PATCH as patchRoute } from "@/app/api/signatures/[id]/route";
 import { GET as adminRoute } from "@/app/api/admin/route";
 import { getDb } from "@/lib/db";
 import { getStorage } from "@/lib/storage";
@@ -274,6 +274,45 @@ describe("moderation (admin only)", () => {
     expect(pending).toHaveLength(1);
     expect(JSON.stringify(all)).not.toMatch(/storageKey|sha256/);
     expect((await adminRoute(getRequest("/api/admin?status=nope", ADMIN))).status).toBe(400);
+  });
+});
+
+describe("DELETE /api/signatures/:id (admin only)", () => {
+  const del = (id: string, headers: Record<string, string> = ADMIN) =>
+    deleteRoute(new Request("http://x", { method: "DELETE", headers }), ctx(id));
+
+  it("requires the admin token and leaves the signature untouched otherwise", async () => {
+    const { id } = await submitOk();
+    expect((await del(id, {})).status).toBe(401);
+    expect((await del(id, { "x-admin-token": "wrong" })).status).toBe(401);
+    expect(await db.signature.count()).toBe(1);
+    expect(storedFiles()).toHaveLength(1);
+  });
+
+  it("removes the row AND the file; it leaves the public list and its image becomes 404", async () => {
+    const { id } = await submitOk();
+    await approve(id);
+    expect((await del(id)).status).toBe(204);
+    expect(await db.signature.findUnique({ where: { id } })).toBeNull();
+    expect(storedFiles()).toEqual([]);
+    expect((await json(await listRoute(getRequest("/api/signatures")))).total).toBe(0);
+    expect((await imageRoute(getRequest(`/api/signatures/${id}`, ADMIN), ctx(id))).status).toBe(404);
+  });
+
+  it("unknown, malformed and already-deleted ids are 404", async () => {
+    const { id } = await submitOk();
+    expect((await del(id)).status).toBe(204);
+    expect((await del(id)).status).toBe(404);
+    expect((await del(crypto.randomUUID())).status).toBe(404);
+    expect((await del("not-a-uuid")).status).toBe(404);
+  });
+
+  it("a failed file delete still removes the record (orphan is logged, not an error)", async () => {
+    const { id } = await submitOk();
+    vi.spyOn(getStorage(), "delete").mockRejectedValueOnce(new Error("disk gone"));
+    expect((await del(id)).status).toBe(204);
+    expect(await db.signature.count()).toBe(0);
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("orphaned file after delete"), expect.any(Error));
   });
 });
 
